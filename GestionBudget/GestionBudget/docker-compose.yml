@@ -1,0 +1,17 @@
+
+services:
+
+  db:
+    image: mariadb:10.7
+    restart: always
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: gestion_budget_db # Aggiungi questa riga
+    ports:
+      - "3308:3306"
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "8082:8080"
