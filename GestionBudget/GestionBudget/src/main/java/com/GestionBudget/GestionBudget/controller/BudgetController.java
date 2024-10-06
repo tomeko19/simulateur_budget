@@ -13,6 +13,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/budgets")
+@CrossOrigin(origins = "http://localhost:5173")
 public class BudgetController {
 
     private final BudgetService budgetService;

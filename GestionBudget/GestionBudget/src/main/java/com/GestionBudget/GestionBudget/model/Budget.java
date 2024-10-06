@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.Date;
-@NoArgsConstructor @Getter @Setter @ToString @AllArgsConstructor
+ @Getter @Setter @ToString @AllArgsConstructor
 @Entity
 @Table(name = "budgets")
 public class Budget {
@@ -26,5 +26,17 @@ public class Budget {
     @Column(name = "updated_at")
     private Date updatedAt; // Date de dernière mise à jour
 
+    public Budget() {
+        this.createdAt = new Date();
+    }
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = new Date();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = new Date();
+    }
 
 }
