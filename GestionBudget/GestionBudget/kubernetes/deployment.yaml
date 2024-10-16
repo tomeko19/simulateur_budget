@@ -1,0 +1,95 @@
+# deployment.yml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: budget-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: budget-app
+  template:
+    metadata:
+      labels:
+        app: budget-app
+    spec:
+      containers:
+        - name: budget-app
+          image: tchatotomeko/budget-app:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8081
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:mariadb://mariadb-service:3306/gestion_budget_db
+            - name: SPRING_DATASOURCE_USERNAME
+              value: root
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: root
+            - name: SPRING_DATASOURCE_DRIVER_CLASS_NAME
+              value: org.mariadb.jdbc.Driver
+            - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+              value: update
+            - name: SERVER_SERVLET_CONTEXT_PATH
+              value: /api
+            - name: SPRING_JPA_SHOW_SQL
+              value: "true"
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mariadb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mariadb
+  template:
+    metadata:
+      labels:
+        app: mariadb
+    spec:
+      containers:
+        - name: mariadb
+          image: mariadb:10.7
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MARIADB_ROOT_PASSWORD
+              value: root
+            - name: MARIADB_DATABASE
+              value: gestion_budget_db
+          volumeMounts:
+            - name: mariadb-persistent-storage
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: mariadb-persistent-storage
+          emptyDir: {}
+
+---
+# Service MariaDB pour permettre à budget-app de se connecter
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb-service
+spec:
+  ports:
+    - port: 3306
+  selector:
+    app: mariadb
+
+---
+
+# Service pour exposer budget-app
+apiVersion: v1
+kind: Service
+metadata:
+  name: budget-app-service
+spec:
+  ports:
+    - port: 8081
+  selector:
+    app: budget-app

@@ -1,0 +1,43 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub')
+        AWS_CREDENTIALS = credentials('aws-credentials')
+    }
+
+    stages {
+        stage('Build') {
+            steps {
+                sh './mvnw clean package -DskipTests'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t votre-nom-utilisateur-dockerhub/budget-app:${BUILD_NUMBER} .'
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
+                sh 'docker push votre-nom-utilisateur-dockerhub/budget-app:${BUILD_NUMBER}'
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                withAWS(credentials: 'aws-credentials', region: 'us-east-1') {
+                    sh 'aws eks get-token --cluster-name votre-nom-cluster | kubectl apply -f kubernetes/'
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            sh 'docker logout'
+        }
+    }
+}

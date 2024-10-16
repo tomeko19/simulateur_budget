@@ -1,9 +1,16 @@
-FROM openjdk:17-jdk-slim
+FROM openjdk:21-jdk-slim AS build
 
 WORKDIR /app
 
-COPY target/GestionBudget-0.0.1-SNAPSHOT.jar app.jar
+COPY . .
+RUN ./mvnw clean package -DskipTests
+
+FROM openjdk:21-jdk-slim
+
+WORKDIR /app
+
+COPY --from=build /app/target/*.jar app.jar
 
 EXPOSE 8081
 
-CMD ["java", "-jar", "app.jar"]
+CMD ["java", "-jar", "-Dspring.profiles.active=prod", "app.jar"]
